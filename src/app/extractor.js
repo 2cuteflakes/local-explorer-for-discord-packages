@@ -223,7 +223,7 @@ export const extractData = async (files) => {
     extractedData.user.discriminator = fetchedUser.discriminator;
     extractedData.user.avatar_hash = fetchedUser.avatar;
 
-    const confirmedPayments = extractedData.user.payments.filter((p) => p.status === 1);
+    const confirmedPayments = extractedData.user.payments !== undefined ? extractedData.user.payments.filter((p) => p.status === 1) : [];
     if (confirmedPayments.length) {
         const currencies = [...new Set(confirmedPayments.map((p) => p.currency))];
         for (let p of confirmedPayments) {

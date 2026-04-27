@@ -19,7 +19,7 @@ const getMessagesRoot = (files) => {
 const getServersRoot = (files) => {
     // Find any guild.json inside a numbered folder
     const sample = files.find(f => /\/[0-9]{16,32}\/guild\.json$/.test(f.name));
-    if (!sample) throw new Error('Could not find Servers folder structure');
+    if (!sample) return null;
     // Remove the guild ID and file name to get the root
     const segments = sample.name.split('/');
     return segments.slice(0, segments.length - 2).join('/');
@@ -321,8 +321,10 @@ export const extractData = async (files) => {
     console.log('[debug] Loading guilds...');
     loadTask.set('Loading joined servers...');
 
-    const guildIndex = JSON.parse(await readFile(`${serversFolder}/index.json`));
-    extractedData.guildCount = Object.keys(guildIndex).length;
+    if (serversFolder) {
+        const guildIndex = JSON.parse(await readFile(`${serversFolder}/index.json`));
+        extractedData.guildCount = Object.keys(guildIndex).length;
+    }
 
     console.log(`[debug] ${extractedData.guildCount} guilds loaded`);
 

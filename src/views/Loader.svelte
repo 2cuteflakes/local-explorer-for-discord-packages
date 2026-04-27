@@ -42,22 +42,25 @@
             errorReportURL = generateGitHubIssueURL(errorMsg, fileStructure);
         };
         
-        let validPackage = true;
-        const requiredFiles = [
-            'README.txt',
-            'user.json',
-            'index.json'
-        ];
         if (files.some((file) => file.name.startsWith('package/'))) {
             setErrorWithReport('Seems like you unzipped and re-zipped your package file. To fix this issue, instead of right clicking on the package folder and zipping it, you should open the folder, select all files inside it, and zip them directly. Name the resulting file "package.zip" and try again.');
             loading = false;
             return;
         }
-        for (const requiredFile of requiredFiles) {
-            if (!files.some((file) => file.name.includes(requiredFile))) validPackage = false;
+        const hasUserJson = files.some((file) => /^([^\/]+)\/user\.json$/.test(file.name));
+        const hasMessages = files.some((file) => /\/c?[0-9]{16,32}\/channel\.json$/.test(file.name));
+        if (!hasUserJson && !hasMessages) {
+            setErrorWithReport('Your package looks empty or in an unexpected format. Make sure you uploaded the original <code>package.zip</code> from Discord.');
+            loading = false;
+            return;
         }
-        if (!validPackage) {
-            setErrorWithReport('Your package seems to be corrupted. Click or drop your package file here to retry');
+        if (!hasUserJson) {
+            setErrorWithReport('Your package is missing the <strong>Account info</strong> section. DDPE needs it to identify you. Please re-request your data on Discord with at least <em>Account info</em> and <em>Messages</em> selected.');
+            loading = false;
+            return;
+        }
+        if (!hasMessages) {
+            setErrorWithReport('Your package does not contain any <strong>Messages</strong>. Please re-request your data on Discord with the <em>Messages</em> category selected.');
             loading = false;
             return;
         }

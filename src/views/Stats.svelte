@@ -159,7 +159,7 @@
                         strokeLinejoin="square"
                         content="You have spoken in % different text channels"
                         count="{ $data.channelCount }"
-                        explanation="That's ~{ Math.round($data.channelCount / $data.guildCount) } per guild!"
+                        explanation="{ $data.guildCount > 0 ? `That's ~${Math.round($data.channelCount / $data.guildCount)} per guild!` : '' }"
                     />
                 </Card>
                 <Card name="top-users">

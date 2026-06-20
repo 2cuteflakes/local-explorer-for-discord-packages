@@ -36,7 +36,7 @@
   "dependencies": {
     "@jridgewell/sourcemap-codec": "^1.5.5",
     "@rollup/plugin-terser": "^1.0.0",
-    "@zerodevx/svelte-toast": "^0.1.4",
+    "@zerodevx/svelte-toast": "^0.9.6",
     "fflate": "^0.8.3",
     "papaparse": "^5.5.4",
     "sass": "^1.101.0",

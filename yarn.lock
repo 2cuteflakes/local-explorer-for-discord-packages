@@ -1098,10 +1098,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@zerodevx/svelte-toast@npm:^0.1.4":
-  version: 0.1.4
-  resolution: "@zerodevx/svelte-toast@npm:0.1.4"
-  checksum: da852a1f4d026d2d090653ec3ffbfe45c128fcfe7db08f9bc7501c64625c2fbf7d9c351ded3e4b1d3bd5cefd82cc5d3a4b7074338ba362ef8386bf8d0ec2ab98
+"@zerodevx/svelte-toast@npm:^0.9.6":
+  version: 0.9.6
+  resolution: "@zerodevx/svelte-toast@npm:0.9.6"
+  peerDependencies:
+    svelte: ^3.57.0 || ^4.0.0 || ^5.0.0
+  checksum: f4d23f9252edc6a6cda33893b28e2294599a99e77b6c32aac46c3ef796a4cf800e14d55a734d0c4f9eb32e2fa84c5cb8719b5bb2927d43dab74e55319ce3c96c
   languageName: node
   linkType: hard
 
@@ -2464,7 +2466,7 @@ __metadata:
     "@sveltejs/vite-plugin-svelte": ^3.1.2
     "@testing-library/jest-dom": ^6.9.1
     "@testing-library/svelte": ^5.3.1
-    "@zerodevx/svelte-toast": ^0.1.4
+    "@zerodevx/svelte-toast": ^0.9.6
     eslint: ^7.20.0
     eslint-plugin-svelte3: ^3.1.1
     fflate: ^0.8.3

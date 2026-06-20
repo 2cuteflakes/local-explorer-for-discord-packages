@@ -1,27 +1,19 @@
-<img width="200" height="150" align="left" style="float: left; margin: 0 10px 0 0;" alt="DDPE" src="https://github.com/Androz2091/discord-data-package-explorer/raw/master/public/favicon.png">  
+# 📦 Local Explorer for Discord Packages
 
-# [Discord Data Package Explorer](https://ddpe.androz2091.fr)
+What's **really** in your Discord Data package? And how can this data be useful? This app does the job for you!
 
-What's **really** in your Discord Data package? And how can this data be useful? Discord Data Package Explorer does the job for you!
-
-## Dumpus
-
-**Discord Data Package Explorer v2** is now available as [Dumpus](https://github.com/dumpus-app/dumpus-app). This repository (v1) will still be maintained 💪
-
-## Example
-
-### [DEMO](https://ddpe.androz2091.fr/stats/demo)
-
-![Example](./example.png)
+This is a fork of [Discord Data Package Explorer](https://github.com/Androz2091/discord-data-package-explorer) by Androz2091, updated to run locally. Not affiliated with, endorsed by, or sponsored by Discord Inc.
 
 > [!IMPORTANT]
-> On June 14th, 2025, Discord updated their package format once again. We've just released an update that should resolve all related issues. If you're still experiencing problems, feel free to open an issue — we'll do our best to fix it promptly.
+> This version has been updated to work with the Discord data package format as of 2026.
 
 ## How to Use
 
 * Ask for your data file in Discord (`Settings` > `Privacy & Safety`)
-* Open **https://ddpe.androz2091.fr**
-* and import your data file!
+* Clone this repository
+* Run `./setup.sh` to check for (and install) the dependencies you need - Node.js and Yarn
+* Run `./start.sh` to build and start the app. It'll print the URL to open (defaults to `http://localhost:5000` - use `./start.sh --port <port>` to pick a different one)
+* Import your data file!
 
 ### Docker
 
@@ -30,15 +22,10 @@ and you can access the app at http://localhost:5000.
 
 ### Manual Installation
 
-Discord Data Package Explorer is built with **[Svelte](https://svelte.dev)**, and is quite easy to install.
+This app is built with **[Svelte](https://svelte.dev)**, and is quite easy to install.
 
 * Clone the repository.
 * Install the dependencies using `npm install` or `yarn install`.
 * Start the app using `npm run dev` or `yarn dev`!
 
-> Note: for testing purposes, you may append use [this link](https://ddpe.androz2091.fr/stats/demo) to use the mocked data.
-
-### Kaki87
-
-This project was created after a discussion with [Kaki87](https://kaki87.net), an awesome developer who taught me a lot of things. He had in mind to create this app but didn't have the time for it. I decided to learn Svelte and build it as a side project :)
-This project would never have existed without him! 🙏
+> Note: for testing purposes, you can use the `/stats/demo` route to see mocked data.

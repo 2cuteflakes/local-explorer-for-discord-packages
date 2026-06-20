@@ -1,3 +1,22 @@
+Local Explorer for Discord Packages
+
+Copyright (C) 2021 Androz2091
+Copyright (C) 2026 2cuteflakes
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version. See the full license text below.
+
+This is a fork of Discord Data Package Explorer
+(https://github.com/Androz2091/discord-data-package-explorer) by
+Androz2091. It was modified starting in 2026 (by 2cuteflakes) to run
+locally instead of relying on a hosted instance or third-party
+identity-lookup APIs, with additional features added on top - see the
+project's git history for the full list of changes.
+
+--------------------------------------------------------------------------
+
                     GNU GENERAL PUBLIC LICENSE
                        Version 3, 29 June 2007
 

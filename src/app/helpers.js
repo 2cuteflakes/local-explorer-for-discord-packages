@@ -1,10 +1,83 @@
-import axios from 'axios';
+// Returns null when there's no real avatar to show, rather than falling
+// back to one of Discord's own default-avatar artwork images - callers
+// should render a generic placeholder (e.g. an initial) instead.
+export const generateAvatarURL = (avatarHash, id) => {
+    if (!avatarHash) return null;
+    return `https://cdn.discordapp.com/avatars/${id}/${avatarHash}.${avatarHash.startsWith('a_') ? 'gif' : 'webp'}`;
+};
 
-export const generateAvatarURL = (avatarHash, id, discriminator) => {
-    let avatarURL = 'https://cdn.discordapp.com/';
-    if (avatarHash) avatarURL += `avatars/${id}/${avatarHash}.${avatarHash.startsWith('a_') ? 'gif' : 'webp'}`;
-    else avatarURL += `embed/avatars/${discriminator % 5}.png`;
-    return avatarURL;
+// Below 20 messages and between 21-200 get fixed grey/white bands. Above
+// that, the rest of the range (up to the list's max) is split into 5
+// equal-width bands using a colorblind-friendly palette, low -> high.
+const MESSAGE_COUNT_LOW_THRESHOLD = 20;
+const MESSAGE_COUNT_MID_THRESHOLD = 200;
+
+const MESSAGE_COUNT_BANDS = [
+    { color: '#b0b0b0', message: "You've barely talked - practically strangers." },
+    { color: '#ffffff', message: 'A casual acquaintance.' },
+    { color: '#f5e6a8', message: "You're getting to know each other." },
+    { color: '#a8d4ef', message: 'A real friendship is forming.' },
+    { color: '#aee0a8', message: 'Solid buddies at this point!' },
+    { color: '#c7b3e8', message: 'Close friends, for sure.' },
+    { color: '#f4a6c6', message: 'Your ride-or-die - an absolute bestie!' }
+];
+// Only the bands above the fixed grey/white thresholds; kept exported for
+// anything that just wants the color scale itself.
+export const MESSAGE_COUNT_COLORS = MESSAGE_COUNT_BANDS.slice(2).map((band) => band.color);
+
+/**
+ * Full info (color, range label, and a cute relationship blurb) for a
+ * message count: fixed grey/white bands for small counts, then 5
+ * colorblind-friendly bands scaled across the rest of the list's range
+ * (every package has very different volumes, so that part adapts per-list
+ * rather than using a fixed absolute ceiling).
+ * @param value The message count to describe
+ * @param min Unused - kept so call sites can keep passing the list's [min, max] range
+ * @param max The largest value in the list
+ * @returns { color, rangeLabel, message }
+ */
+export const messageCountInfo = (value, min, max) => {
+    const fmt = (n) => Math.round(n).toLocaleString('en-US');
+    if (value <= MESSAGE_COUNT_LOW_THRESHOLD) {
+        return { ...MESSAGE_COUNT_BANDS[0], rangeLabel: `0-${MESSAGE_COUNT_LOW_THRESHOLD}` };
+    }
+    if (value <= MESSAGE_COUNT_MID_THRESHOLD) {
+        return { ...MESSAGE_COUNT_BANDS[1], rangeLabel: `${MESSAGE_COUNT_LOW_THRESHOLD + 1}-${MESSAGE_COUNT_MID_THRESHOLD}` };
+    }
+    const upperBands = MESSAGE_COUNT_BANDS.slice(2);
+    const upperMax = Math.max(max, MESSAGE_COUNT_MID_THRESHOLD + 1);
+    const bandWidth = (upperMax - MESSAGE_COUNT_MID_THRESHOLD) / upperBands.length;
+    const index = Math.min(upperBands.length - 1, Math.floor((value - MESSAGE_COUNT_MID_THRESHOLD) / bandWidth));
+    const bandStart = Math.floor(MESSAGE_COUNT_MID_THRESHOLD + index * bandWidth) + 1;
+    const bandEnd = index === upperBands.length - 1 ? upperMax : Math.floor(MESSAGE_COUNT_MID_THRESHOLD + (index + 1) * bandWidth);
+    return { ...upperBands[index], rangeLabel: `${fmt(bandStart)}-${fmt(bandEnd)}` };
+};
+
+/**
+ * Just the color from messageCountInfo, for call sites that don't need the
+ * tooltip text.
+ */
+export const messageCountColor = (value, min, max) => messageCountInfo(value, min, max).color;
+
+const URL_REGEX = /\bhttps?:\/\/[-A-Za-z0-9+&@#/%?=~_|!:,.;]*[-A-Za-z0-9+&@#/%=~_|]/g;
+
+/**
+ * Split message text into plain-text and link segments, so URLs can be
+ * rendered as clickable <a> tags without resorting to {@html} (message
+ * content is untrusted-ish - it can contain anything a Discord message can).
+ * @param text The raw message content
+ * @returns Array of { type: 'text' | 'link', value }
+ */
+export const linkify = (text) => {
+    const segments = [];
+    let lastIndex = 0;
+    for (const match of text.matchAll(URL_REGEX)) {
+        if (match.index > lastIndex) segments.push({ type: 'text', value: text.slice(lastIndex, match.index) });
+        segments.push({ type: 'link', value: match[0] });
+        lastIndex = match.index + match[0].length;
+    }
+    if (lastIndex < text.length) segments.push({ type: 'text', value: text.slice(lastIndex) });
+    return segments;
 };
 
 export const getCreatedTimestamp = (id) => {
@@ -31,23 +104,6 @@ export const getFavoriteWords = (words) => {
     for (let p in object) array[array.length] = p;
     
     return array.sort((a, b) => object[b] - object[a]).map((word) => ({ word: word, count: object[word] })).slice(0, 2);
-};
-
-export const getGitHubContributors = () => {
-    return new Promise((resolve, reject) => {
-        const cachedExpiresAt = localStorage.getItem('contributors_cache_expires_at');
-        const cachedData = localStorage.getItem('contributors_cache');
-        if (cachedExpiresAt && (cachedExpiresAt > Date.now()) && cachedData) return resolve(JSON.parse(cachedData));
-        axios.get('https://api.github.com/repos/Androz2091/discord-data-package-explorer/contributors')
-            .then((response) => {
-                const data = response.data.map((user) => ({ username: user.login, avatar: user.avatar_url, url: user.html_url }) );
-                localStorage.setItem('contributors_cache', JSON.stringify(data));
-                localStorage.setItem('contributors_cache_expires_at', Date.now() + 3600000);
-                resolve(data);
-            }).catch(() => {
-                reject(cachedData || []);
-            });
-    });
 };
 
 /**

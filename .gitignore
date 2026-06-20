@@ -1,4 +1,36 @@
+# Dependencies / build output
 node_modules
 public/build
 .yarn/cache
 .yarn/install-state.gz
+
+# Discord data packages - these contain someone's real personal data,
+# never commit one.
+*.zip
+
+# Env / secrets
+.env
+.env.*
+!.env.example
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+logs
+*.log
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Editor files
+.idea
+*.swp
+*.swo
+*~
+
+# Misc caches
+.eslintcache
+.cache
+*.tsbuildinfo

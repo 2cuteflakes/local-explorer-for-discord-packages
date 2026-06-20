@@ -390,15 +390,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"axios@npm:^0.21.1":
-  version: 0.21.1
-  resolution: "axios@npm:0.21.1"
-  dependencies:
-    follow-redirects: ^1.10.0
-  checksum: c87915fa0b18c15c63350112b6b3563a3e2ae524d7707de0a73d2e065e0d30c5d3da8563037bc29d4cc1b7424b5a350cb7274fa52525c6c04a615fe561c6ab11
-  languageName: node
-  linkType: hard
-
 "balanced-match@npm:^1.0.0":
   version: 1.0.0
   resolution: "balanced-match@npm:1.0.0"
@@ -622,39 +613,6 @@ __metadata:
   checksum: ab953a73c72dbd4e8fc68e4ed4bfd92c97eb6c43734af3900add963fd3a9316f3bc0578b018b24198d4c31a358571eff5f0656e81a1f3b9ad5c547d58b2d093d
   languageName: node
   linkType: hard
-
-"discord-data-package-explorer@workspace:.":
-  version: 0.0.0-use.local
-  resolution: "discord-data-package-explorer@workspace:."
-  dependencies:
-    "@jridgewell/sourcemap-codec": ^1.4.15
-    "@rollup/plugin-commonjs": ^11.0.0
-    "@rollup/plugin-json": ^4.1.0
-    "@rollup/plugin-node-resolve": ^6.0.0
-    "@rollup/plugin-terser": ^0.4.3
-    "@zerodevx/svelte-toast": ^0.1.4
-    axios: ^0.21.1
-    eslint: ^7.20.0
-    eslint-plugin-svelte3: ^3.1.1
-    fflate: ^0.6.7
-    jwt-decode: ^3.1.2
-    papaparse: ^5.3.0
-    rollup: ^1.20.0
-    rollup-plugin-css-only: ^3.1.0
-    rollup-plugin-livereload: ^1.0.0
-    rollup-plugin-svelte: ^7.1.0
-    rollup-plugin-terser: ^5.1.2
-    sass: ^1.35.1
-    sirv-cli: ^0.4.4
-    snake-case: ^3.0.4
-    svelte: ^3.0.0
-    svelte-frappe-charts: ^1.5.0
-    svelte-preprocess: ^4.7.3
-    svelte-routing: ^1.6.0
-    svelte-simple-modal: ^0.8.1
-    svelte-tooltip: ^1.2.0
-  languageName: unknown
-  linkType: soft
 
 "doctrine@npm:^3.0.0":
   version: 3.0.0
@@ -958,16 +916,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"follow-redirects@npm:^1.10.0":
-  version: 1.13.2
-  resolution: "follow-redirects@npm:1.13.2"
-  peerDependenciesMeta:
-    debug:
-      optional: true
-  checksum: c17f14c186e8a5cc9e6f179f87286306151017a919735d68e2d440fd353da9f9d15789e03ea057a1c2b49dda9d662b05bb4370c7350f70de43b18d3ead2b36a0
-  languageName: node
-  linkType: hard
-
 "frappe-charts@npm:^1.5.6":
   version: 1.5.6
   resolution: "frappe-charts@npm:1.5.6"
@@ -1262,13 +1210,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"jwt-decode@npm:^3.1.2":
-  version: 3.1.2
-  resolution: "jwt-decode@npm:3.1.2"
-  checksum: 20a4b072d44ce3479f42d0d2c8d3dabeb353081ba4982e40b83a779f2459a70be26441be6c160bfc8c3c6eadf9f6380a036fbb06ac5406b5674e35d8c4205eeb
-  languageName: node
-  linkType: hard
-
 "kleur@npm:^3.0.0":
   version: 3.0.3
   resolution: "kleur@npm:3.0.3"
@@ -1313,6 +1254,37 @@ __metadata:
   checksum: 697ac5ec815d01d7feec9f6a15f918411827ebf789b4f64e215c292811dffc091678b9a493bb901a63b19f48754eef02f1641c730b2607b2137002b3bf3cf472
   languageName: node
   linkType: hard
+
+"local-explorer-for-discord-packages@workspace:.":
+  version: 0.0.0-use.local
+  resolution: "local-explorer-for-discord-packages@workspace:."
+  dependencies:
+    "@jridgewell/sourcemap-codec": ^1.4.15
+    "@rollup/plugin-commonjs": ^11.0.0
+    "@rollup/plugin-json": ^4.1.0
+    "@rollup/plugin-node-resolve": ^6.0.0
+    "@rollup/plugin-terser": ^0.4.3
+    "@zerodevx/svelte-toast": ^0.1.4
+    eslint: ^7.20.0
+    eslint-plugin-svelte3: ^3.1.1
+    fflate: ^0.6.7
+    papaparse: ^5.3.0
+    rollup: ^1.20.0
+    rollup-plugin-css-only: ^3.1.0
+    rollup-plugin-livereload: ^1.0.0
+    rollup-plugin-svelte: ^7.1.0
+    rollup-plugin-terser: ^5.1.2
+    sass: ^1.35.1
+    sirv-cli: ^0.4.4
+    snake-case: ^3.0.4
+    svelte: ^3.0.0
+    svelte-frappe-charts: ^1.5.0
+    svelte-preprocess: ^4.7.3
+    svelte-routing: ^1.6.0
+    svelte-simple-modal: ^0.8.1
+    svelte-tooltip: ^1.2.0
+  languageName: unknown
+  linkType: soft
 
 "lodash@npm:^4.17.20":
   version: 4.17.20

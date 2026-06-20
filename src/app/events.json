@@ -1,13 +1,12 @@
 {
     "eventsEnabled": [
         "joinVoiceChannel",
-        "notificationClicked",
         "appOpened",
         "joinCall",
         "addReaction",
         "messageEdited",
         "sendMessage",
-        "slashCommandUsed"
+        "applicationCommandUsed"
     ],
     "eventList": [
         "permissionsRequested",

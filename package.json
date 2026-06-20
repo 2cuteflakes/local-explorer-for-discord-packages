@@ -1,5 +1,5 @@
 {
-  "name": "discord-data-package-explorer",
+  "name": "local-explorer-for-discord-packages",
   "version": "2.3.4",
   "packageManager": "yarn@3.6.3",
   "scripts": {
@@ -25,9 +25,7 @@
     "@jridgewell/sourcemap-codec": "^1.4.15",
     "@rollup/plugin-terser": "^0.4.3",
     "@zerodevx/svelte-toast": "^0.1.4",
-    "axios": "^0.21.1",
     "fflate": "^0.6.7",
-    "jwt-decode": "^3.1.2",
     "papaparse": "^5.3.0",
     "sass": "^1.35.1",
     "sirv-cli": "^0.4.4",

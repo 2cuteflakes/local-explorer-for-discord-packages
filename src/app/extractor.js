@@ -1,5 +1,4 @@
 import Papa from 'papaparse';
-import axios from 'axios';
 
 import eventsData from './events.json';
 import { loadEstimatedTime, loadTask } from './store';
@@ -43,23 +42,19 @@ const getUserRoot = (files) => {
 };
 
 /**
- * Fetch a user on Discord.
- * This is necessary because sometimes we only have the user ID in the files.
- * @param userID The ID of the user to fetch
+ * Build a user object for display, using the name from Messages/index.json
+ * when the user is a DM partner (the only place the package names other
+ * users), falling back to the raw ID otherwise. The package never contains
+ * other users' avatars.
+ * @param userID The ID of the user
+ * @param dmNames Map of DM partner user ID -> display name, from Messages/index.json
  */
-const fetchUser = async (userID) => {
-    const res = await axios(`https://diswho.androz2091.fr/user/${userID}`, {
-        headers: {
-            Authorization: `Bearer ${localStorage.getItem('diswhoJwt')}`
-        }
-    }).catch(() => {});
-    if (!res || !res.data) return {
-        username: 'Unknown',
-        discriminator: '0000',
-        avatar: null
-    };
-    return res.data;
-};
+const userFromID = (userID, dmNames = {}) => ({
+    id: userID,
+    username: (dmNames[userID] && !dmNames[userID].includes('Unknown Participant')) ? dmNames[userID] : `${userID}`,
+    discriminator: '0',
+    avatar: null
+});
 
 /**
  * Parse the mention to return a user ID
@@ -84,9 +79,9 @@ const parseCSV = (input) => {
             id: m.ID,
             timestamp: m.Timestamp,
             length: m.Contents.length,
-            words: m.Contents.split(' ')
-            // content: m.Contents,
-            // attachments: m.Attachments
+            words: m.Contents.split(' '),
+            content: m.Contents,
+            attachments: m.Attachments
         }));
 };
 
@@ -101,9 +96,9 @@ const parseJson = (input) => {
         id: m.ID,
         timestamp: m.Timestamp,
         length: m.Contents.length,
-        words: m.Contents.split(' ')
-        // content: m.Contents,
-        // attachments: m.Attachments
+        words: m.Contents.split(' '),
+        content: m.Contents,
+        attachments: m.Attachments
     }));
 }
 
@@ -113,7 +108,7 @@ const perDay = (value, userID) => {
 
 const readAnalyticsFile = (file) => {
     return new Promise((resolve) => {
-        if (!file) resolve({});
+        if (!file) return resolve({});
         const eventsOccurrences = {};
         for (let eventName of eventsData.eventsEnabled) eventsOccurrences[eventName] = 0;
         const decoder = new DecodeUTF8();
@@ -128,30 +123,32 @@ const readAnalyticsFile = (file) => {
             loadEstimatedTime.set(`Estimated time: ${remainingTime+1} second${remainingTime+1 === 1 ? '' : 's'}`);
             decoder.push(data, final);
         };
+        const eventNames = Object.keys(eventsOccurrences).map((event) => [event, snakeCase(event)]);
+        const maxEventNameLength = Math.max(...eventNames.map(([, eventName]) => eventName.length));
         let prevChkEnd = '';
         decoder.ondata = (str, final) => {
             str = prevChkEnd + str;
-            for (let event of Object.keys(eventsOccurrences)) {
-                const eventName = snakeCase(event);
-                // eslint-disable-next-line no-constant-condition
-                while (true) {
-                    const ind = str.indexOf(eventName);
-                    if (ind == -1) break;
-                    str = str.slice(ind + eventName.length);
+            for (let [event, eventName] of eventNames) {
+                let searchFrom = 0;
+                let ind;
+                // eslint-disable-next-line no-cond-assign
+                while ((ind = str.indexOf(eventName, searchFrom)) !== -1) {
                     eventsOccurrences[event]++;
+                    searchFrom = ind + eventName.length;
                 }
-                prevChkEnd = str.slice(-eventName.length);
             }
+            // Keep enough of the tail to catch an event name that's split
+            // across this chunk and the next one.
+            prevChkEnd = str.slice(-(maxEventNameLength - 1));
             if (final) {
                 resolve({
                     openCount: eventsOccurrences.appOpened,
-                    notificationCount: eventsOccurrences.notificationClicked,
                     joinVoiceChannelCount: eventsOccurrences.joinVoiceChannel,
                     joinCallCount: eventsOccurrences.joinCall,
                     addReactionCount: eventsOccurrences.addReaction,
                     messageEditedCount: eventsOccurrences.messageEdited,
                     sendMessageCount: eventsOccurrences.sendMessage,
-                    slashCommandUsedCount: eventsOccurrences.slashCommandUsed
+                    slashCommandUsedCount: eventsOccurrences.applicationCommandUsed
                 });
             }
         };
@@ -171,6 +168,8 @@ export const extractData = async (files) => {
 
         topDMs: [],
         topChannels: [],
+        allDMs: [],
+        allChannels: [],
         guildCount: 0,
         dmChannelCount: 0,
         channelCount: 0,
@@ -180,7 +179,7 @@ export const extractData = async (files) => {
         hoursValues: [],
         favoriteWords: null,
         payments: {
-            total: { usd: 0 },
+            total: 'USD 0.00',
             list: ''
         }
     };
@@ -217,11 +216,20 @@ export const extractData = async (files) => {
     loadTask.set('Loading user information...');
 
     extractedData.user = JSON.parse(await readFile(`${accountFolder}/user.json`));
-    loadTask.set('Fetching user information...');
-    const fetchedUser = await fetchUser(extractedData.user.id);
-    extractedData.user.username = fetchedUser.username;
-    extractedData.user.discriminator = fetchedUser.discriminator;
-    extractedData.user.avatar_hash = fetchedUser.avatar;
+    extractedData.user.avatar_hash = extractedData.user.avatar_hash || extractedData.user.avatar || null;
+    extractedData.user.discriminator = extractedData.user.discriminator || '0';
+    extractedData.user.username = extractedData.user.username || 'Unknown';
+
+    // Payments used to be inlined in user.json as `user.payments`. They've
+    // since moved to their own export under Account/user_data_exports/
+    // discord_billing/payments.json, as a { records: [...] } table, and the
+    // `status` codes were renumbered (1 = Pending, 2 = Succeeded now, where
+    // 1 used to mean confirmed). Support both shapes.
+    const billingPaymentsRaw = await readFile(`${accountFolder}/user_data_exports/discord_billing/payments.json`);
+    const allPayments = billingPaymentsRaw
+        ? JSON.parse(billingPaymentsRaw).records
+        : (extractedData.user.payments || []);
+    const paymentSucceededStatus = billingPaymentsRaw ? 2 : 1;
 
     // Discord Orbs are a virtual currency awarded via Quests / events — the
     // user never pays real money for them, and the `amount` is denominated in
@@ -229,21 +237,17 @@ export const extractData = async (files) => {
     // real spend but 29 720 orbs of cosmetic purchases that they spent
     // "DISCORD_ORB 297.20", which is meaningless. Drop them alongside the
     // status filter.
-    const confirmedPayments = extractedData.user.payments !== undefined ? extractedData.user.payments.filter((p) => p.status === 1 && p.currency !== 'discord_orb') : [];
+    const confirmedPayments = allPayments.filter((p) => p.status === paymentSucceededStatus && p.currency !== 'discord_orb');
     if (confirmedPayments.length) {
-        const currencies = [...new Set(confirmedPayments.map((p) => p.currency))];
+        const netAmount = (p) => (p.amount - (p.amount_refunded || 0)) / 100;
+        const totalsByCurrency = {};
         for (let p of confirmedPayments) {
-            if (!extractedData.payments.total[p.currency]) extractedData.payments.total[p.currency] = p.amount / 100;
-            else extractedData.payments.total[p.currency] += p.amount / 100;
+            totalsByCurrency[p.currency] = (totalsByCurrency[p.currency] || 0) + netAmount(p);
         }
-        extractedData.payments.list += confirmedPayments.sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime()).map((p) => `${p.description} (${p.currency.toUpperCase()} ${p.amount / 100})`).join('<br>');
-        extractedData.payments.total = ((loc) => {
-            const totals = [];
-            for (let currency of currencies) {
-                totals.push(currency.toLocaleUpperCase() + " " + extractedData.payments.total[currency].toLocaleString(loc));
-            }
-            return totals.join(", ");
-        })('en-US');
+        extractedData.payments.list += confirmedPayments.sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime()).map((p) => `${p.description} (${p.currency.toUpperCase()} ${netAmount(p)})`).join('<br>');
+        extractedData.payments.total = Object.keys(totalsByCurrency)
+            .map((currency) => `${currency.toUpperCase()} ${totalsByCurrency[currency].toLocaleString('en-US')}`)
+            .join(', ');
     }
     console.log('[debug] User info loaded.');
 
@@ -289,13 +293,18 @@ export const extractData = async (files) => {
                 const data = JSON.parse(rawData);
                 const messages = extension === 'csv' ? parseCSV(rawMessages) : parseJson(rawMessages);
                 const name = messagesIndex[data.id];
-                const isDM = data.recipients && data.recipients.length === 2;
+                // A group DM can shrink down to just 2 remaining recipients
+                // over time but keeps its GROUP_DM type, so recipient count
+                // alone isn't a reliable way to tell it apart from a true DM.
+                const isDM = data.type === 'DM';
+                const isGroupDM = data.type === 'GROUP_DM';
                 const dmUserID = isDM ? data.recipients.find((userID) => userID !== extractedData.user.id) : undefined;
                 channels.push({
                     data,
                     messages,
                     name,
                     isDM,
+                    isGroupDM,
                     dmUserID
                 });
 
@@ -309,17 +318,64 @@ export const extractData = async (files) => {
 
     loadTask.set('Calculating statistics...');
 
+    // Some DMs (and the occasional channel) have zero messages - e.g. opening
+    // someone's profile creates the DM channel even if you never send
+    // anything. Channel IDs are Discord snowflakes, which encode their own
+    // creation timestamp, so fall back to decoding that instead of showing
+    // no date at all.
+    const lastMessageTimestamp = (channel) => channel.messages.reduce((latest, message) => {
+        const t = new Date(message.timestamp).getTime();
+        return t > latest ? t : latest;
+    }, 0) || getCreatedTimestamp(channel.data.id);
+
     extractedData.channelCount = channels.filter(c => !c.isDM).length;
     extractedData.dmChannelCount = channels.length - extractedData.channelCount;
-    extractedData.topChannels = channels.filter(c => c.data && c.data.guild).sort((a, b) => b.messages.length - a.messages.length).slice(0, 10).map((channel) => ({
-        name: channel.name,
+
+    // Messages/index.json names DM channels after the other participant -
+    // it's the only place in the package other users get a display name.
+    // Discord sometimes formats that name as "Direct Message with X" rather
+    // than just "X" - strip the redundant prefix since DMs are already
+    // labelled as such everywhere we display this.
+    const dmNames = {};
+    for (let channel of channels) {
+        if (channel.isDM && channel.dmUserID && channel.name) {
+            dmNames[channel.dmUserID] = channel.name.replace(/^Direct Message with /i, '');
+        }
+    }
+
+    // Group DMs aren't true 1:1 DMs - they behave more like informal
+    // channels, so list them alongside guild channels (using the
+    // participant list as a stand-in "guild name") instead of dropping
+    // them entirely. Discord serializes an unset custom name as the
+    // literal string "None" rather than null/empty.
+    const hasCustomGroupDmName = (channel) => Boolean(channel.name) && channel.name !== 'None' && channel.name !== 'Unknown channel';
+    const groupDmParticipants = (channel) => (channel.data.recipients || [])
+        .filter((id) => id !== extractedData.user.id)
+        .map((id) => userFromID(id, dmNames));
+    const groupDmName = (channel) => {
+        if (hasCustomGroupDmName(channel)) return channel.name;
+        const participantNames = groupDmParticipants(channel).map((p) => p.username);
+        return participantNames.length ? participantNames.join(', ') : 'Group DM';
+    };
+
+    const guildChannels = channels.filter(c => (c.data && c.data.guild) || c.isGroupDM).map((channel) => ({
+        id: channel.data.id,
+        name: channel.isGroupDM ? groupDmName(channel) : channel.name,
         messageCount: channel.messages.length,
-        guildName: channel.data.guild.name
+        guildName: channel.isGroupDM ? 'Group DM' : channel.data.guild.name,
+        lastMessageAt: lastMessageTimestamp(channel)
     }));
+    extractedData.topChannels = [...guildChannels].sort((a, b) => b.messageCount - a.messageCount).slice(0, 10);
+    extractedData.allChannels = [...guildChannels].sort((a, b) => (b.lastMessageAt || 0) - (a.lastMessageAt || 0));
     extractedData.characterCount = channels.map((channel) => channel.messages).flat().map((message) => message.length).reduce((p, c) => p + c);
 
+    // Message timestamps in the package are UTC. Bucket by UTC here so the
+    // persisted default is deterministic regardless of the browser's local
+    // timezone setting - the Stats page offers a timezone picker that
+    // recomputes this from the in-memory transcripts for the current session.
+    const allMessageTimestamps = channels.map((c) => c.messages).flat().map((m) => m.timestamp);
     for (let i = 0; i < 24; i++) {
-        extractedData.hoursValues.push(channels.map((c) => c.messages).flat().filter((m) => new Date(m.timestamp).getHours() === i).length);
+        extractedData.hoursValues.push(allMessageTimestamps.filter((t) => new Date(t).getUTCHours() === i).length);
     }
 
     console.log(`[debug] ${channels.length} channels loaded.`);
@@ -339,9 +395,8 @@ export const extractData = async (files) => {
     for (let wordData of extractedData.favoriteWords) {
         const userID = parseMention(wordData.word);
         if (userID) {
-            const userData = await fetchUser(userID);
             extractedData.favoriteWords[extractedData.favoriteWords.findIndex((wd) => wd.word === wordData.word)] = {
-                word: `@${userData.username}`,
+                word: `@${userFromID(userID, dmNames).username}`,
                 count: wordData.count
             };
         }
@@ -349,37 +404,81 @@ export const extractData = async (files) => {
 
     console.log('[debug] Fetching top DMs...');
     loadTask.set('Loading user activity...');
-    
-    extractedData.topDMs = channels
+
+    const dmChannels = channels
         .filter((channel) => channel.isDM)
-        .sort((a, b) => b.messages.length - a.messages.length)
-        .slice(0, 10)
         .map((channel) => ({
             id: channel.data.id,
             dmUserID: channel.dmUserID,
             messageCount: channel.messages.length,
-            userData: null
+            lastMessageAt: lastMessageTimestamp(channel),
+            userData: userFromID(channel.dmUserID, dmNames)
         }));
-    await Promise.all(extractedData.topDMs.map((channel) => {
-        return new Promise((resolve) => {
-            fetchUser(channel.dmUserID).then((userData) => {
-                const channelIndex = extractedData.topDMs.findIndex((c) => c.id === channel.id);
-                extractedData.topDMs[channelIndex].userData = userData;
-                resolve();
-            });
-        });
-    }));
+    extractedData.topDMs = [...dmChannels].sort((a, b) => b.messageCount - a.messageCount).slice(0, 10);
+    extractedData.allDMs = [...dmChannels].sort((a, b) => (b.lastMessageAt || 0) - (a.lastMessageAt || 0));
 
     console.log(`[debug] ${extractedData.topDMs.length} top DMs loaded.`);
+
+    // Kept separate from the rest of extractedData because it holds raw
+    // message content, which (unlike everything else) must never be
+    // persisted to localStorage. The caller is responsible for splitting
+    // this out before storing the rest of extractedData.
+    const toTranscriptMessages = (channel) => channel.messages
+        .map((m) => ({
+            id: m.id,
+            timestamp: m.timestamp,
+            content: m.content,
+            // Multiple attachment URLs are space-separated, not comma-separated -
+            // a literal comma would otherwise mangle a single URL's query string.
+            attachments: (m.attachments || '').split(/\s+/).map((a) => a.trim()).filter(Boolean)
+        }))
+        .sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
+
+    extractedData.dmTranscripts = {};
+    for (let channel of channels.filter((c) => c.isDM)) {
+        extractedData.dmTranscripts[channel.data.id] = {
+            userData: userFromID(channel.dmUserID, dmNames),
+            messages: toTranscriptMessages(channel)
+        };
+    }
+
+    extractedData.channelTranscripts = {};
+    for (let channel of channels.filter((c) => (c.data && c.data.guild) || c.isGroupDM)) {
+        extractedData.channelTranscripts[channel.data.id] = channel.isGroupDM ? {
+            // Keep the custom name (if any) separate from the participant
+            // list, so the viewer isn't stuck saying "X, Y: X, Y" when the
+            // name itself is just the participants joined together.
+            name: hasCustomGroupDmName(channel) ? channel.name : null,
+            guildName: 'Group DM',
+            isGroupDM: true,
+            participants: groupDmParticipants(channel),
+            messages: toTranscriptMessages(channel)
+        } : {
+            name: channel.name,
+            guildName: channel.data.guild.name,
+            isGroupDM: false,
+            messages: toTranscriptMessages(channel)
+        };
+    }
 
     loadTask.set('Calculating statistics...');
     console.log('[debug] Fetching activity...');
 
-    const statistics = await readAnalyticsFile(files.find((file) => /analytics\/events-[0-9]{4}-[0-9]{5}-of-[0-9]{5}\.json/.test(file.name)));
+    // Discord has moved this around over time: it used to live under
+    // "analytics/events-...json", and is now under "Activity/<subfolder>/
+    // events-...json" with the subfolder name varying (e.g. "reporting",
+    // "tns"). Read every matching file and sum the counts together, since
+    // an unrelated/empty one just contributes zeroes.
+    const analyticsFiles = files.filter((file) => /events-[0-9]+-[0-9]+-of-[0-9]+\.json$/i.test(file.name));
+    console.log('[debug] Found analytics files:', analyticsFiles.map((f) => f.name));
+    const statisticsParts = await Promise.all(analyticsFiles.map((file) => readAnalyticsFile(file)));
+    const statistics = statisticsParts.reduce((acc, part) => {
+        for (let key of Object.keys(part)) acc[key] = (acc[key] || 0) + part[key];
+        return acc;
+    }, {});
     extractedData.openCount = statistics.openCount;
     extractedData.averageOpenCountPerDay = extractedData.openCount && perDay(statistics.openCount, extractedData.user.id);
-    extractedData.notificationCount = statistics.notificationCount;
-    extractedData.joinVoiceChannelCount = statistics.joinVoiceChannelCount; 
+    extractedData.joinVoiceChannelCount = statistics.joinVoiceChannelCount;
     extractedData.joinCallCount = statistics.joinCallCount;
     extractedData.addReactionCount = statistics.addReactionCount;
     extractedData.messageEditedCount = statistics.messageEditedCount;

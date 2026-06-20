@@ -676,19 +676,19 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@rollup/plugin-terser@npm:^0.4.3":
-  version: 0.4.3
-  resolution: "@rollup/plugin-terser@npm:0.4.3"
+"@rollup/plugin-terser@npm:^1.0.0":
+  version: 1.0.0
+  resolution: "@rollup/plugin-terser@npm:1.0.0"
   dependencies:
-    serialize-javascript: ^6.0.1
+    serialize-javascript: ^7.0.3
     smob: ^1.0.0
     terser: ^5.17.4
   peerDependencies:
-    rollup: ^2.x || ^3.x
+    rollup: ^2.0.0||^3.0.0||^4.0.0
   peerDependenciesMeta:
     rollup:
       optional: true
-  checksum: 0d697e816f32e9609c48defbda6f3ed90548126fbf673451cfde2c576a7511073cd25d45a9669f179d0b89485e62f56cabeb65428c2232469ab6057ae5dc7709
+  checksum: 26f13f0a445d289a1d58b4361e388f0e68a38bd752ec5623683dfaa50e5ecc568a69f0ef2e369177144e41fffa53691f2c37bf77735ed276147428b57b999742
   languageName: node
   linkType: hard
 
@@ -2446,7 +2446,7 @@ __metadata:
     "@rollup/plugin-commonjs": ^29.0.3
     "@rollup/plugin-json": ^6.1.0
     "@rollup/plugin-node-resolve": ^16.0.3
-    "@rollup/plugin-terser": ^0.4.3
+    "@rollup/plugin-terser": ^1.0.0
     "@sveltejs/vite-plugin-svelte": ^3.1.2
     "@testing-library/jest-dom": ^6.9.1
     "@testing-library/svelte": ^5.3.1
@@ -2878,15 +2878,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"randombytes@npm:^2.1.0":
-  version: 2.1.0
-  resolution: "randombytes@npm:2.1.0"
-  dependencies:
-    safe-buffer: ^5.1.0
-  checksum: d779499376bd4cbb435ef3ab9a957006c8682f343f14089ed5f27764e4645114196e75b7f6abf1cbd84fd247c0cb0651698444df8c9bf30e62120fbbc52269d6
-  languageName: node
-  linkType: hard
-
 "react-is@npm:^17.0.1":
   version: 17.0.2
   resolution: "react-is@npm:17.0.2"
@@ -3119,13 +3110,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"safe-buffer@npm:^5.1.0":
-  version: 5.2.1
-  resolution: "safe-buffer@npm:5.2.1"
-  checksum: b99c4b41fdd67a6aaf280fcd05e9ffb0813654894223afb78a31f14a19ad220bba8aba1cb14eddce1fcfb037155fe6de4e861784eb434f7d11ed58d1e70dd491
-  languageName: node
-  linkType: hard
-
 "sass@npm:^1.101.0":
   version: 1.101.0
   resolution: "sass@npm:1.101.0"
@@ -3172,12 +3156,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"serialize-javascript@npm:^6.0.1":
-  version: 6.0.1
-  resolution: "serialize-javascript@npm:6.0.1"
-  dependencies:
-    randombytes: ^2.1.0
-  checksum: 3c4f4cb61d0893b988415bdb67243637333f3f574e9e9cc9a006a2ced0b390b0b3b44aef8d51c951272a9002ec50885eefdc0298891bc27eb2fe7510ea87dc4f
+"serialize-javascript@npm:^7.0.3":
+  version: 7.0.6
+  resolution: "serialize-javascript@npm:7.0.6"
+  checksum: c20a2546e3f28030dc68b92127d975d706c9cad73a455a120d9b604cb88c362ce2d767177385e2f231514cc3d42abd932f50a5b65e3b5f19251330c0314da684
   languageName: node
   linkType: hard
 

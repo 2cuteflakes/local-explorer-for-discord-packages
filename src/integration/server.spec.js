@@ -67,8 +67,13 @@ describe('server (HTTP-level only)', () => {
         expect(html).toContain('<title>Local Explorer for Discord Packages</title>');
     });
 
-    it('given sirv is run in --single (SPA) mode, when I request a path that looks like a missing asset, then it still falls back to the index.html shell rather than a real 404 - this is intentional SPA-routing behavior, but means a typo\'d asset URL fails silently as a blank page instead of a clear 404', async () => {
+    it('given sirv is run in --single (SPA) mode, when I request a path that looks like a missing asset (has a file extension), then it returns a real 404 rather than falling back to index.html', async () => {
         const res = await fetch(`${BASE_URL}/build/this-file-does-not-exist.js`);
+        expect(res.status).toBe(404);
+    });
+
+    it('given sirv is run in --single (SPA) mode, when I request an app route with no file extension, then it still falls back to the index.html shell', async () => {
+        const res = await fetch(`${BASE_URL}/this-is-not-a-real-route`);
         expect(res.status).toBe(200);
         const body = await res.text();
         expect(body).toContain('<title>Local Explorer for Discord Packages</title>');

@@ -624,6 +624,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@polka/url@npm:^1.0.0-next.24":
+  version: 1.0.0-next.29
+  resolution: "@polka/url@npm:1.0.0-next.29"
+  checksum: 69ca11ab15a4ffec7f0b07fcc4e1f01489b3d9683a7e1867758818386575c60c213401259ba3705b8a812228d17e2bfd18e6f021194d943fff4bca389c9d4f28
+  languageName: node
+  linkType: hard
+
 "@rollup/plugin-commonjs@npm:^29.0.3":
   version: 29.0.3
   resolution: "@rollup/plugin-commonjs@npm:29.0.3"
@@ -2082,6 +2089,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"get-port@npm:^5.1.1":
+  version: 5.1.1
+  resolution: "get-port@npm:5.1.1"
+  checksum: 0162663ffe5c09e748cd79d97b74cd70e5a5c84b760a475ce5767b357fb2a57cb821cee412d646aa8a156ed39b78aab88974eddaa9e5ee926173c036c0713787
+  languageName: node
+  linkType: hard
+
 "glob-parent@npm:^5.0.0, glob-parent@npm:~5.1.0":
   version: 5.1.1
   resolution: "glob-parent@npm:5.1.1"
@@ -2392,7 +2406,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"kleur@npm:^4.1.5":
+"kleur@npm:^4.1.4, kleur@npm:^4.1.5":
   version: 4.1.5
   resolution: "kleur@npm:4.1.5"
   checksum: 1dc476e32741acf0b1b5b0627ffd0d722e342c1b0da14de3e8ae97821327ca08f9fb944542fb3c126d90ac5f27f9d804edbe7c585bf7d12ef495d115e0f22c12
@@ -2461,7 +2475,7 @@ __metadata:
     rollup-plugin-livereload: ^2.0.5
     rollup-plugin-svelte: ^7.2.3
     sass: ^1.101.0
-    sirv-cli: ^0.4.4
+    sirv-cli: ^3.0.1
     snake-case: ^4.0.0
     svelte: ^4.2.20
     svelte-frappe-charts: ^1.5.0
@@ -2588,6 +2602,13 @@ __metadata:
   version: 1.1.6
   resolution: "mri@npm:1.1.6"
   checksum: c568269a40e2e95d48f28b88ab8b24bdc7c586edbfbb3e5ce7a4e3cee0665aef673b86bc2b63c98289d29b573a39d0e054924e415286a8dafdabfc68785746c7
+  languageName: node
+  linkType: hard
+
+"mrmime@npm:^2.0.0":
+  version: 2.0.1
+  resolution: "mrmime@npm:2.0.1"
+  checksum: 455a555009edb2ed6e587e0fcb5e41fcbf8f1dcca28242a57d054f02204ab198bed93ba9de75db06bd3447e8603bc74e10a22440ba99431fc4a751435fba35bf
   languageName: node
   linkType: hard
 
@@ -3110,6 +3131,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"sade@npm:^1.6.0":
+  version: 1.8.1
+  resolution: "sade@npm:1.8.1"
+  dependencies:
+    mri: ^1.1.0
+  checksum: 0756e5b04c51ccdc8221ebffd1548d0ce5a783a44a0fa9017a026659b97d632913e78f7dca59f2496aa996a0be0b0c322afd87ca72ccd909406f49dbffa0f45d
+  languageName: node
+  linkType: hard
+
 "sass@npm:^1.101.0":
   version: 1.101.0
   resolution: "sass@npm:1.101.0"
@@ -3133,6 +3163,13 @@ __metadata:
   dependencies:
     xmlchars: ^2.2.0
   checksum: d3fa3e2aaf6c65ed52ee993aff1891fc47d5e47d515164b5449cbf5da2cbdc396137e55590472e64c5c436c14ae64a8a03c29b9e7389fc6f14035cf4e982ef3b
+  languageName: node
+  linkType: hard
+
+"semiver@npm:^1.0.0":
+  version: 1.1.0
+  resolution: "semiver@npm:1.1.0"
+  checksum: 87e78c4fca6e082fed8905266341524b952a6d917397ca7e4feba469459e4165015fb25c0cd5b214f30ac4588e227e7c5b56ce91fd053893738d8a44a761ddb3
   languageName: node
   linkType: hard
 
@@ -3203,6 +3240,24 @@ __metadata:
   languageName: node
   linkType: hard
 
+"sirv-cli@npm:^3.0.1":
+  version: 3.0.1
+  resolution: "sirv-cli@npm:3.0.1"
+  dependencies:
+    console-clear: ^1.1.0
+    get-port: ^5.1.1
+    kleur: ^4.1.4
+    local-access: ^1.0.1
+    sade: ^1.6.0
+    semiver: ^1.0.0
+    sirv: ^3.0.0
+    tinydate: ^1.0.0
+  bin:
+    sirv: bin.js
+  checksum: 446f36c799102de72fb165c752a37fc1d3265033753d907428b20c61da48c7e537f76c31813a70c008c8a41b964c02838dbec7def020a62699eb4c2322bc9e72
+  languageName: node
+  linkType: hard
+
 "sirv@npm:^0.4.6":
   version: 0.4.6
   resolution: "sirv@npm:0.4.6"
@@ -3210,6 +3265,17 @@ __metadata:
     "@polka/url": ^0.5.0
     mime: ^2.3.1
   checksum: a7ad6ca05c2642acc312c30eb10d93517b2b2d05e36a681dc78a87312b83f684f2c655c5b846735fccac680760bb27543aba60d27db44aa9567552a6a858a313
+  languageName: node
+  linkType: hard
+
+"sirv@npm:^3.0.0":
+  version: 3.0.2
+  resolution: "sirv@npm:3.0.2"
+  dependencies:
+    "@polka/url": ^1.0.0-next.24
+    mrmime: ^2.0.0
+    totalist: ^3.0.0
+  checksum: 570cc6c079e9b4161a6120239db2d97d7c34d216dc2b96b2c2e9d16d3afebc2495c98e8ade8fdaf16c0a49490e52009664261caaa640477f3a3ca518282ba007
   languageName: node
   linkType: hard
 
@@ -3590,6 +3656,13 @@ __metadata:
   dependencies:
     is-number: ^7.0.0
   checksum: f76fa01b3d5be85db6a2a143e24df9f60dd047d151062d0ba3df62953f2f697b16fe5dad9b0ac6191c7efc7b1d9dcaa4b768174b7b29da89d4428e64bc0a20ed
+  languageName: node
+  linkType: hard
+
+"totalist@npm:^3.0.0":
+  version: 3.0.1
+  resolution: "totalist@npm:3.0.1"
+  checksum: 5132d562cf88ff93fd710770a92f31dbe67cc19b5c6ccae2efc0da327f0954d211bbfd9456389655d726c624f284b4a23112f56d1da931ca7cfabbe1f45e778a
   languageName: node
   linkType: hard
 

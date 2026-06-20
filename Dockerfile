@@ -1,4 +1,4 @@
-FROM node:20.4.0-alpine AS build
+FROM node:24-alpine AS build
 WORKDIR /usr/local/ddpe
 RUN corepack enable
 COPY package.json yarn.lock .yarnrc.yml .

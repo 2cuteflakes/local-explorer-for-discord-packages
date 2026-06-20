@@ -32,10 +32,13 @@ export default () => {
     const topChannels = [...guildChannels].sort((a, b) => b.messageCount - a.messageCount).slice(0, 10);
     const allChannels = [...guildChannels].sort((a, b) => b.lastMessageAt - a.lastMessageAt);
 
-    const demoMessages = (content) => new Array(15).fill({}).map(() => ({
+    // One message always carries a (fake, non-resolving) image attachment so
+    // the attachment-preview feature has something to exercise via the demo
+    // route, without depending on a real package or real network access.
+    const demoMessages = (content) => new Array(15).fill({}).map((_, i) => ({
         timestamp: randomLastMessageAt(),
         content,
-        attachments: []
+        attachments: i === 0 ? ['https://cdn.discordapp.com/attachments/1/2/demo-photo.png'] : []
     })).sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
 
     const dmTranscripts = {};

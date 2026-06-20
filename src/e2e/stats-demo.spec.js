@@ -134,6 +134,23 @@ test.describe('Stats page (demo data)', () => {
         await expect(sentence).not.toContainText('(UTC)');
     });
 
+    // Why this test exists: a real regression (svelte-frappe-charts 2.0.0,
+    // see GH issue #1) made this chart render zero visible bars while every
+    // other check on this page - including the favorite-hour sentence
+    // above, which only reads the underlying numbers, not the chart itself -
+    // kept passing. Assert on the actual rendered bar heights, not just the
+    // data feeding into them.
+    test('given the hours chart, when it renders, then all 24 hour bars actually have visible height (not a blank chart)', async ({ page }) => {
+        await page.goto('/stats/demo');
+
+        const bars = page.locator('.card.hours svg.frappe-chart .bar');
+        await expect(bars).toHaveCount(24);
+        await expect.poll(async () => {
+            const heights = await bars.evaluateAll((els) => els.map((e) => parseFloat(e.getAttribute('height') || '0')));
+            return heights.filter((h) => h > 0).length;
+        }).toBeGreaterThan(0);
+    });
+
     // Why this test exists: attachments are rendered via a dedicated
     // component with extension-based logic deciding whether to show a
     // Preview button at all - this confirms the actual click-to-reveal

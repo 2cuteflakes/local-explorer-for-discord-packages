@@ -2018,7 +2018,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"frappe-charts@npm:^1.5.6":
+"frappe-charts@npm:1.5.6":
   version: 1.5.6
   resolution: "frappe-charts@npm:1.5.6"
   checksum: cd1904c684f3954f4fa0d8e80cb7bc2a11ee6e82c2e452017cc9256eec813698d4bba17f0b9fd657898aad09dfeacedc1d85709ab37700e39364427a895a55c2
@@ -2480,11 +2480,12 @@ __metadata:
     sirv-cli: ^3.0.1
     snake-case: ^4.0.0
     svelte: ^4.2.20
-    svelte-frappe-charts: ^1.5.0
+    svelte-frappe-charts: 1.5.0
     svelte-preprocess: ^6.0.5
     svelte-routing: ^2.13.0
     svelte-simple-modal: ^1.6.2
     svelte-tooltip: ^1.2.0
+    typescript: ^6.0.3
     vite: ^5.4.21
     vitest: ^2.1.9
   languageName: unknown
@@ -3414,7 +3415,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"svelte-frappe-charts@npm:^1.5.0":
+"svelte-frappe-charts@npm:1.5.0":
   version: 1.5.0
   resolution: "svelte-frappe-charts@npm:1.5.0"
   dependencies:
@@ -3501,9 +3502,9 @@ __metadata:
   linkType: hard
 
 "svelte@npm:^3.32.2":
-  version: 3.32.3
-  resolution: "svelte@npm:3.32.3"
-  checksum: 99ec5e66704b669d101550f0f704e257cabda892bbfc17ca8f2682873fca91fc45c5d62bae5d3c71237ad42a9ca79d11f4750e1cbd729a6de20e42f0cc512db2
+  version: 3.59.2
+  resolution: "svelte@npm:3.59.2"
+  checksum: 3e9d770292ab5a0061ff2d3a6f77b323014399de7458371ab507465f9860d04d0c8c7a50239d15c78b920cd42065953e3c4a36abb69a2285c52c825017621444
   languageName: node
   linkType: hard
 
@@ -3699,6 +3700,26 @@ __metadata:
   version: 0.8.1
   resolution: "type-fest@npm:0.8.1"
   checksum: d61c4b2eba24009033ae4500d7d818a94fd6d1b481a8111612ee141400d5f1db46f199c014766b9fa9b31a6a7374d96fc748c6d688a78a3ce5a33123839becb7
+  languageName: node
+  linkType: hard
+
+"typescript@npm:^6.0.3":
+  version: 6.0.3
+  resolution: "typescript@npm:6.0.3"
+  bin:
+    tsc: bin/tsc
+    tsserver: bin/tsserver
+  checksum: c1182dfadf8a8cb22a4e32442715afef1af1b950ae635b1c52c27e0d7fb7a5e2607ed7c7c4079bba4163579250e02445fd8d46b09cbceda71ff72a5b7d69db61
+  languageName: node
+  linkType: hard
+
+"typescript@patch:typescript@^6.0.3#~builtin<compat/typescript>":
+  version: 6.0.3
+  resolution: "typescript@patch:typescript@npm%3A6.0.3#~builtin<compat/typescript>::version=6.0.3&hash=f3b441"
+  bin:
+    tsc: bin/tsc
+    tsserver: bin/tsserver
+  checksum: 8ed159a81ab4901a620c19fda539632cee610f8ec34dde57a3acc6b6df72894ad0b50bdd1946b763313d9b73dedb019d2e81c03eff06c0f2c785cde30a537d15
   languageName: node
   linkType: hard
 

@@ -1,6 +1,6 @@
 {
   "name": "local-explorer-for-discord-packages",
-  "version": "2.3.4",
+  "version": "3.0.0",
   "packageManager": "yarn@3.6.3",
   "engines": {
     "node": ">=20"

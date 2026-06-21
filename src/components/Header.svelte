@@ -166,7 +166,7 @@
                         {#if searchResults.length === 0}
                             <div class="app-header-search-empty">No matches found.</div>
                         {:else}
-                            {#each searchResults as result}
+                            {#each searchResults as result (result.message.id)}
                                 <button type="button" class="app-header-search-result" on:click={() => goToResult(result)}>
                                     <div class="app-header-search-result-name">
                                         <span>{result.name}{#if result.type === 'channel'} <small class="text-muted">#{result.guildName}</small>{/if}</span>

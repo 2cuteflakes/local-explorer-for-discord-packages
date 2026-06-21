@@ -206,6 +206,17 @@ describe('payments: filterConfirmedPayments / netPaymentAmount / summarizePaymen
         expect(total).toBe('EUR 5, USD 10');
         expect(list).toBe('A (USD 10)<br>B (EUR 5)');
     });
+
+    // Why this test exists: `list` gets rendered via {@html} in Stats.svelte's
+    // payments popup. `description` is Discord-generated, not user-typed,
+    // but we don't control or validate its contents - this guards against
+    // a regression back to interpolating it unescaped.
+    it('escapes HTML-meaningful characters in the payment description', () => {
+        const payments = [{ currency: 'usd', amount: 100, amount_refunded: 0, description: '<img src=x onerror=alert(1)>', created_at: '2024-01-01T00:00:00Z' }];
+        const { list } = summarizePayments(payments);
+        expect(list).not.toContain('<img');
+        expect(list).toContain('&lt;img src=x onerror=alert(1)&gt;');
+    });
 });
 
 describe('countEventOccurrences', () => {

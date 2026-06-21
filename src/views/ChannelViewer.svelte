@@ -15,7 +15,8 @@
             <div class="dm-avatar dm-avatar-emoji" aria-hidden="true">#️⃣</div>
             <div>
                 {#if transcript.isGroupDM}
-                    <h1>{transcript.name || 'Group DM'}{#if transcript.participants.length}: {#each transcript.participants as participant, i}{#if i > 0}{', '}{/if}<a class="dm-username-link" href="https://vaultcord.com/tools/discord-id-lookup?prefill={participant.id}" target="_blank" rel="noopener noreferrer">{participant.username}</a>{/each}{/if}</h1>
+                    <!-- eslint-disable-next-line svelte/no-useless-mustaches -- {' '} is deliberate, not useless: Svelte 5 trims literal whitespace at the end of an {#if} block, so a plain ", " here silently loses its trailing space (see Svelte 5 migration guide's "Whitespace handling changed" section). -->
+                    <h1>{transcript.name || 'Group DM'}{#if transcript.participants.length}: {#each transcript.participants as participant, i (participant.id)}{#if i > 0}{', '}{/if}<a class="dm-username-link" href="https://vaultcord.com/tools/discord-id-lookup?prefill={participant.id}" target="_blank" rel="noopener noreferrer">{participant.username}</a>{/each}{/if}</h1>
                 {:else}
                     <h1>{transcript.name}</h1>
                     <small class="text-muted">{transcript.guildName}</small>
@@ -29,7 +30,7 @@
                     <div class="dm-message-meta">{new Date(message.timestamp).toLocaleString('en-US')}</div>
                     {#if message.content}
                         <div class="dm-message-content">
-                            {#each linkify(message.content) as segment}
+                            {#each linkify(message.content) as segment, i (i)}
                                 {#if segment.type === 'link'}<a href="{segment.value}" target="_blank" rel="noopener noreferrer">{segment.value}</a>{:else}{segment.value}{/if}
                             {/each}
                         </div>

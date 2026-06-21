@@ -27,7 +27,7 @@
                     <div class="dm-message-meta">{new Date(message.timestamp).toLocaleString('en-US')}</div>
                     {#if message.content}
                         <div class="dm-message-content">
-                            {#each linkify(message.content) as segment}
+                            {#each linkify(message.content) as segment, i (i)}
                                 {#if segment.type === 'link'}<a href="{segment.value}" target="_blank" rel="noopener noreferrer">{segment.value}</a>{:else}{segment.value}{/if}
                             {/each}
                         </div>

@@ -16,9 +16,11 @@
     "start": "sirv public --single --port 5000",
     "test": "vitest run",
     "test:integration": "vitest run --config vitest.integration.config.mjs",
-    "test:e2e": "playwright test"
+    "test:e2e": "playwright test",
+    "lint": "eslint ."
   },
   "devDependencies": {
+    "@eslint/js": "^10.0.1",
     "@playwright/test": "^1.61.0",
     "@rollup/plugin-commonjs": "^29.0.3",
     "@rollup/plugin-json": "^6.1.0",
@@ -26,8 +28,9 @@
     "@sveltejs/vite-plugin-svelte": "^7.1.2",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/svelte": "^5.3.1",
-    "eslint": "^7.20.0",
-    "eslint-plugin-svelte3": "^3.1.1",
+    "eslint": "^10.5.0",
+    "eslint-plugin-svelte": "^3.19.0",
+    "globals": "^17.6.0",
     "jsdom": "^29.1.1",
     "rollup": "^4.62.2",
     "rollup-plugin-css-only": "^4.5.5",

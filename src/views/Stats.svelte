@@ -180,7 +180,7 @@
                         <div class="hours-timezone">
                             <label for="hours-timezone-select">Timezone:</label>
                             <select id="hours-timezone-select" bind:value={selectedTimezone} disabled={!transcriptsLoaded}>
-                                {#each timezones as tz}
+                                {#each timezones as tz (tz)}
                                     <option value={tz}>{tz}</option>
                                 {/each}
                             </select>
@@ -205,7 +205,7 @@
                 <CardGroup name="top-lists" title="Top Lists">
                 <Card name="top-users">
                     <Leaderboard description="The users you chat the most with!">
-                        {#each $data.topDMs as channel, i}
+                        {#each $data.topDMs as channel, i (channel.id)}
                             <LeaderboardItem
                                 position={i}
                                 avatarURL={generateAvatarURL(channel.userData.avatar, channel.userData.id)}
@@ -223,7 +223,7 @@
                 </Card>
                 <Card name="top-channels">
                     <Leaderboard description="The channels you chat the most in!">
-                        {#each $data.topChannels as channel, i}
+                        {#each $data.topChannels as channel, i (channel.id)}
                             <LeaderboardItem
                                 position={i}
                                 name={channel.name}
@@ -243,7 +243,7 @@
                 <CardGroup name="all-lists" title="All Lists">
                 <Card name="all-users">
                     <Leaderboard description="Every user you've exchanged DMs with!">
-                        {#each $data.allDMs as channel, i}
+                        {#each $data.allDMs as channel, i (channel.id)}
                             <LeaderboardItem
                                 position={i}
                                 avatarURL={generateAvatarURL(channel.userData.avatar, channel.userData.id)}
@@ -261,7 +261,7 @@
                 </Card>
                 <Card name="all-channels">
                     <Leaderboard description="Every server channel you've chatted in!">
-                        {#each $data.allChannels as channel, i}
+                        {#each $data.allChannels as channel, i (channel.id)}
                             <LeaderboardItem
                                 position={i}
                                 name={channel.name}

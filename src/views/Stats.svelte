@@ -68,7 +68,11 @@
         return counts;
     };
 
-    $: displayedHoursValues = (selectedTimezone === 'UTC' || !transcriptsLoaded) ? ($data && $data.hoursValues) : hoursForTimezone(selectedTimezone);
+    // Falls back to an empty array (never null/undefined) - $data is briefly
+    // falsy before onMount's data.set() runs, and Svelte 5's finer-grained
+    // effect scheduling can evaluate this expression at that exact moment
+    // (Svelte 4's reactive-statement batching happened not to hit this).
+    $: displayedHoursValues = (selectedTimezone === 'UTC' || !transcriptsLoaded) ? (($data && $data.hoursValues) || []) : hoursForTimezone(selectedTimezone);
 
     // Message-count color-coding is scaled per-list, since the volume of
     // messages varies wildly between packages.

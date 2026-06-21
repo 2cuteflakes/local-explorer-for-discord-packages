@@ -6,7 +6,7 @@ import { getCreatedTimestamp, getFavoriteWords } from './helpers';
 import { DecodeUTF8 } from 'fflate';
 import { snakeCase } from 'snake-case';
 
-const getMessagesRoot = (files) => {
+export const getMessagesRoot = (files) => {
     // Find any channel.json inside a numbered folder
     const sample = files.find(f => /\/c?[0-9]{16,32}\/channel\.json$/.test(f.name));
     if (!sample) throw new Error('Could not find Messages folder structure');
@@ -15,7 +15,7 @@ const getMessagesRoot = (files) => {
     return segments.slice(0, segments.length - 2).join('/');
 };
 
-const getServersRoot = (files) => {
+export const getServersRoot = (files) => {
     // Find any guild.json inside a numbered folder
     const sample = files.find(f => /\/[0-9]{16,32}\/guild\.json$/.test(f.name));
     if (!sample) return null;
@@ -32,7 +32,7 @@ const getServersRoot = (files) => {
  *   * Activités/Activities_1/users/user.json
  *   * Compte/user.json
  */
-const getUserRoot = (files) => {
+export const getUserRoot = (files) => {
     // Find any user.json file
     const sample = files.find(f => /^([^\/]+)\/user\.json$/.test(f.name));
     if (!sample) throw new Error('Could not find User folder structure');
@@ -49,7 +49,7 @@ const getUserRoot = (files) => {
  * @param userID The ID of the user
  * @param dmNames Map of DM partner user ID -> display name, from Messages/index.json
  */
-const userFromID = (userID, dmNames = {}) => ({
+export const userFromID = (userID, dmNames = {}) => ({
     id: userID,
     username: (dmNames[userID] && !dmNames[userID].includes('Unknown Participant')) ? dmNames[userID] : `${userID}`,
     discriminator: '0',
@@ -59,7 +59,7 @@ const userFromID = (userID, dmNames = {}) => ({
 /**
  * Parse the mention to return a user ID
  */
-const parseMention = (mention) => {
+export const parseMention = (mention) => {
     const mentionRegex = /^<@!?(\d+)>$/;
     return mentionRegex.test(mention) ? mention.match(mentionRegex)[1] : null;
 };
@@ -68,7 +68,7 @@ const parseMention = (mention) => {
  * Parse a messages CSV into an object
  * @param input
  */
-const parseCSV = (input) => {
+export const parseCSV = (input) => {
     return Papa.parse(input, {
         header: true,
         newline: ',\r'
@@ -89,7 +89,7 @@ const parseCSV = (input) => {
  * Parse a messages JSON into an object
  * @param input
  */
-const parseJson = (input) => {
+export const parseJson = (input) => {
     return JSON.parse(input)
     .filter((m) => m.Contents)
     .map((m) => ({
@@ -102,15 +102,140 @@ const parseJson = (input) => {
     }));
 }
 
-const perDay = (value, userID) => {
+export const perDay = (value, userID) => {
     return parseInt(value / ((Date.now() - getCreatedTimestamp(userID)) / 24 / 60 / 60 / 1000));
 };
 
-const readAnalyticsFile = (file) => {
+// Some DMs (and the occasional channel) have zero messages - e.g. opening
+// someone's profile creates the DM channel even if you never send anything.
+// Channel IDs are Discord snowflakes, which encode their own creation
+// timestamp, so fall back to decoding that instead of showing no date at all.
+export const lastMessageTimestamp = (channel) => channel.messages.reduce((latest, message) => {
+    const t = new Date(message.timestamp).getTime();
+    return t > latest ? t : latest;
+}, 0) || getCreatedTimestamp(channel.data.id);
+
+// Messages/index.json names DM channels after the other participant - it's
+// the only place in the package other users get a display name. Discord
+// sometimes formats that name as "Direct Message with X" rather than just
+// "X" - strip the redundant prefix since DMs are already labelled as such
+// everywhere we display this.
+export const buildDmNames = (channels) => {
+    const dmNames = {};
+    for (let channel of channels) {
+        if (channel.isDM && channel.dmUserID && channel.name) {
+            dmNames[channel.dmUserID] = channel.name.replace(/^Direct Message with /i, '');
+        }
+    }
+    return dmNames;
+};
+
+// Group DMs aren't true 1:1 DMs - they behave more like informal channels,
+// so list them alongside guild channels (using the participant list as a
+// stand-in "guild name") instead of dropping them entirely. Discord
+// serializes an unset custom name as the literal string "None" rather than
+// null/empty.
+export const hasCustomGroupDmName = (channel) => Boolean(channel.name) && channel.name !== 'None' && channel.name !== 'Unknown channel';
+
+export const groupDmParticipants = (channel, dmNames, currentUserId) => (channel.data.recipients || [])
+    .filter((id) => id !== currentUserId)
+    .map((id) => userFromID(id, dmNames));
+
+export const groupDmName = (channel, dmNames, currentUserId) => {
+    if (hasCustomGroupDmName(channel)) return channel.name;
+    const participantNames = groupDmParticipants(channel, dmNames, currentUserId).map((p) => p.username);
+    return participantNames.length ? participantNames.join(', ') : 'Group DM';
+};
+
+// Kept separate from the rest of extractedData because it holds raw message
+// content, which (unlike everything else) must never be persisted to
+// localStorage. The caller is responsible for splitting this out before
+// storing the rest of extractedData.
+export const toTranscriptMessages = (channel) => channel.messages
+    .map((m) => ({
+        id: m.id,
+        timestamp: m.timestamp,
+        content: m.content,
+        // Multiple attachment URLs are space-separated, not comma-separated -
+        // a literal comma would otherwise mangle a single URL's query string.
+        attachments: (m.attachments || '').split(/\s+/).map((a) => a.trim()).filter(Boolean)
+    }))
+    .sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
+
+// Discord Orbs are a virtual currency awarded via Quests / events - the user
+// never pays real money for them, and the `amount` is denominated in orbs
+// (not cents). Including these would tell e.g. a user with €0 of real spend
+// but 29 720 orbs of cosmetic purchases that they spent "DISCORD_ORB
+// 297.20", which is meaningless. Drop them alongside the status filter.
+export const filterConfirmedPayments = (allPayments, paymentSucceededStatus) =>
+    allPayments.filter((p) => p.status === paymentSucceededStatus && p.currency !== 'discord_orb');
+
+export const netPaymentAmount = (p) => (p.amount - (p.amount_refunded || 0)) / 100;
+
+export const summarizePayments = (confirmedPayments) => {
+    if (!confirmedPayments.length) return { total: 'USD 0.00', list: '' };
+    const totalsByCurrency = {};
+    for (let p of confirmedPayments) {
+        totalsByCurrency[p.currency] = (totalsByCurrency[p.currency] || 0) + netPaymentAmount(p);
+    }
+    const list = confirmedPayments
+        .sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime())
+        .map((p) => `${p.description} (${p.currency.toUpperCase()} ${netPaymentAmount(p)})`)
+        .join('<br>');
+    const total = Object.keys(totalsByCurrency)
+        .map((currency) => `${currency.toUpperCase()} ${totalsByCurrency[currency].toLocaleString('en-US')}`)
+        .join(', ');
+    return { total, list };
+};
+
+// The list of [eventKey, snake_case_event_name] pairs scanned for in the
+// analytics file, plus how long a chunk-boundary tail needs to be kept to
+// catch an event name split across two chunks.
+export const analyticsEventNames = eventsData.eventsEnabled.map((event) => [event, snakeCase(event)]);
+export const maxAnalyticsEventNameLength = Math.max(...analyticsEventNames.map(([, name]) => name.length));
+
+/**
+ * Count occurrences of each tracked event name within a chunk of decoded
+ * analytics-file text, carrying over enough of the previous chunk's tail to
+ * catch a match split across the chunk boundary.
+ * @param text The newly-decoded chunk of text
+ * @param prevChunkEnd The tail kept from the previous call (or '' for the first chunk)
+ * @param eventNames Defaults to the real analyticsEventNames - overridable for tests
+ * @returns { counts, nextChunkEnd }
+ */
+export const countEventOccurrences = (text, prevChunkEnd = '', eventNames = analyticsEventNames) => {
+    const str = prevChunkEnd + text;
+    const counts = {};
+    for (let [event, eventName] of eventNames) {
+        counts[event] = 0;
+        let searchFrom = 0;
+        let ind;
+        // eslint-disable-next-line no-cond-assign
+        while ((ind = str.indexOf(eventName, searchFrom)) !== -1) {
+            counts[event]++;
+            searchFrom = ind + eventName.length;
+        }
+    }
+    const maxLength = Math.max(...eventNames.map(([, name]) => name.length));
+    const nextChunkEnd = str.slice(-(maxLength - 1));
+    return { counts, nextChunkEnd };
+};
+
+export const mapEventCountsToStatistics = (eventsOccurrences) => ({
+    openCount: eventsOccurrences.appOpened,
+    joinVoiceChannelCount: eventsOccurrences.joinVoiceChannel,
+    joinCallCount: eventsOccurrences.joinCall,
+    addReactionCount: eventsOccurrences.addReaction,
+    messageEditedCount: eventsOccurrences.messageEdited,
+    sendMessageCount: eventsOccurrences.sendMessage,
+    slashCommandUsedCount: eventsOccurrences.applicationCommandUsed
+});
+
+export const readAnalyticsFile = (file) => {
     return new Promise((resolve) => {
         if (!file) return resolve({});
         const eventsOccurrences = {};
-        for (let eventName of eventsData.eventsEnabled) eventsOccurrences[eventName] = 0;
+        for (let [event] of analyticsEventNames) eventsOccurrences[event] = 0;
         const decoder = new DecodeUTF8();
         let startAt = Date.now();
         let bytesRead = 0;
@@ -123,34 +248,12 @@ const readAnalyticsFile = (file) => {
             loadEstimatedTime.set(`Estimated time: ${remainingTime+1} second${remainingTime+1 === 1 ? '' : 's'}`);
             decoder.push(data, final);
         };
-        const eventNames = Object.keys(eventsOccurrences).map((event) => [event, snakeCase(event)]);
-        const maxEventNameLength = Math.max(...eventNames.map(([, eventName]) => eventName.length));
         let prevChkEnd = '';
         decoder.ondata = (str, final) => {
-            str = prevChkEnd + str;
-            for (let [event, eventName] of eventNames) {
-                let searchFrom = 0;
-                let ind;
-                // eslint-disable-next-line no-cond-assign
-                while ((ind = str.indexOf(eventName, searchFrom)) !== -1) {
-                    eventsOccurrences[event]++;
-                    searchFrom = ind + eventName.length;
-                }
-            }
-            // Keep enough of the tail to catch an event name that's split
-            // across this chunk and the next one.
-            prevChkEnd = str.slice(-(maxEventNameLength - 1));
-            if (final) {
-                resolve({
-                    openCount: eventsOccurrences.appOpened,
-                    joinVoiceChannelCount: eventsOccurrences.joinVoiceChannel,
-                    joinCallCount: eventsOccurrences.joinCall,
-                    addReactionCount: eventsOccurrences.addReaction,
-                    messageEditedCount: eventsOccurrences.messageEdited,
-                    sendMessageCount: eventsOccurrences.sendMessage,
-                    slashCommandUsedCount: eventsOccurrences.applicationCommandUsed
-                });
-            }
+            const { counts, nextChunkEnd } = countEventOccurrences(str, prevChkEnd);
+            for (let [event] of analyticsEventNames) eventsOccurrences[event] += counts[event];
+            prevChkEnd = nextChunkEnd;
+            if (final) resolve(mapEventCountsToStatistics(eventsOccurrences));
         };
         file.start();
     });
@@ -231,24 +334,8 @@ export const extractData = async (files) => {
         : (extractedData.user.payments || []);
     const paymentSucceededStatus = billingPaymentsRaw ? 2 : 1;
 
-    // Discord Orbs are a virtual currency awarded via Quests / events — the
-    // user never pays real money for them, and the `amount` is denominated in
-    // orbs (not cents). Including these would tell e.g. a user with €0 of
-    // real spend but 29 720 orbs of cosmetic purchases that they spent
-    // "DISCORD_ORB 297.20", which is meaningless. Drop them alongside the
-    // status filter.
-    const confirmedPayments = allPayments.filter((p) => p.status === paymentSucceededStatus && p.currency !== 'discord_orb');
-    if (confirmedPayments.length) {
-        const netAmount = (p) => (p.amount - (p.amount_refunded || 0)) / 100;
-        const totalsByCurrency = {};
-        for (let p of confirmedPayments) {
-            totalsByCurrency[p.currency] = (totalsByCurrency[p.currency] || 0) + netAmount(p);
-        }
-        extractedData.payments.list += confirmedPayments.sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime()).map((p) => `${p.description} (${p.currency.toUpperCase()} ${netAmount(p)})`).join('<br>');
-        extractedData.payments.total = Object.keys(totalsByCurrency)
-            .map((currency) => `${currency.toUpperCase()} ${totalsByCurrency[currency].toLocaleString('en-US')}`)
-            .join(', ');
-    }
+    const confirmedPayments = filterConfirmedPayments(allPayments, paymentSucceededStatus);
+    extractedData.payments = summarizePayments(confirmedPayments);
     console.log('[debug] User info loaded.');
 
     // Parse and load channels
@@ -318,49 +405,15 @@ export const extractData = async (files) => {
 
     loadTask.set('Calculating statistics...');
 
-    // Some DMs (and the occasional channel) have zero messages - e.g. opening
-    // someone's profile creates the DM channel even if you never send
-    // anything. Channel IDs are Discord snowflakes, which encode their own
-    // creation timestamp, so fall back to decoding that instead of showing
-    // no date at all.
-    const lastMessageTimestamp = (channel) => channel.messages.reduce((latest, message) => {
-        const t = new Date(message.timestamp).getTime();
-        return t > latest ? t : latest;
-    }, 0) || getCreatedTimestamp(channel.data.id);
-
     extractedData.channelCount = channels.filter(c => !c.isDM).length;
     extractedData.dmChannelCount = channels.length - extractedData.channelCount;
 
-    // Messages/index.json names DM channels after the other participant -
-    // it's the only place in the package other users get a display name.
-    // Discord sometimes formats that name as "Direct Message with X" rather
-    // than just "X" - strip the redundant prefix since DMs are already
-    // labelled as such everywhere we display this.
-    const dmNames = {};
-    for (let channel of channels) {
-        if (channel.isDM && channel.dmUserID && channel.name) {
-            dmNames[channel.dmUserID] = channel.name.replace(/^Direct Message with /i, '');
-        }
-    }
-
-    // Group DMs aren't true 1:1 DMs - they behave more like informal
-    // channels, so list them alongside guild channels (using the
-    // participant list as a stand-in "guild name") instead of dropping
-    // them entirely. Discord serializes an unset custom name as the
-    // literal string "None" rather than null/empty.
-    const hasCustomGroupDmName = (channel) => Boolean(channel.name) && channel.name !== 'None' && channel.name !== 'Unknown channel';
-    const groupDmParticipants = (channel) => (channel.data.recipients || [])
-        .filter((id) => id !== extractedData.user.id)
-        .map((id) => userFromID(id, dmNames));
-    const groupDmName = (channel) => {
-        if (hasCustomGroupDmName(channel)) return channel.name;
-        const participantNames = groupDmParticipants(channel).map((p) => p.username);
-        return participantNames.length ? participantNames.join(', ') : 'Group DM';
-    };
+    const dmNames = buildDmNames(channels);
+    const currentUserId = extractedData.user.id;
 
     const guildChannels = channels.filter(c => (c.data && c.data.guild) || c.isGroupDM).map((channel) => ({
         id: channel.data.id,
-        name: channel.isGroupDM ? groupDmName(channel) : channel.name,
+        name: channel.isGroupDM ? groupDmName(channel, dmNames, currentUserId) : channel.name,
         messageCount: channel.messages.length,
         guildName: channel.isGroupDM ? 'Group DM' : channel.data.guild.name,
         lastMessageAt: lastMessageTimestamp(channel)
@@ -419,21 +472,6 @@ export const extractData = async (files) => {
 
     console.log(`[debug] ${extractedData.topDMs.length} top DMs loaded.`);
 
-    // Kept separate from the rest of extractedData because it holds raw
-    // message content, which (unlike everything else) must never be
-    // persisted to localStorage. The caller is responsible for splitting
-    // this out before storing the rest of extractedData.
-    const toTranscriptMessages = (channel) => channel.messages
-        .map((m) => ({
-            id: m.id,
-            timestamp: m.timestamp,
-            content: m.content,
-            // Multiple attachment URLs are space-separated, not comma-separated -
-            // a literal comma would otherwise mangle a single URL's query string.
-            attachments: (m.attachments || '').split(/\s+/).map((a) => a.trim()).filter(Boolean)
-        }))
-        .sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
-
     extractedData.dmTranscripts = {};
     for (let channel of channels.filter((c) => c.isDM)) {
         extractedData.dmTranscripts[channel.data.id] = {
@@ -451,7 +489,7 @@ export const extractData = async (files) => {
             name: hasCustomGroupDmName(channel) ? channel.name : null,
             guildName: 'Group DM',
             isGroupDM: true,
-            participants: groupDmParticipants(channel),
+            participants: groupDmParticipants(channel, dmNames, currentUserId),
             messages: toTranscriptMessages(channel)
         } : {
             name: channel.name,

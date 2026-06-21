@@ -148,7 +148,7 @@ export const generateFileStructureDump = (files) => {
  * @returns The GitHub issue URL
  */
 export const generateGitHubIssueURL = (errorMessage, fileStructure) => {
-    const repo = 'Androz2091/discord-data-package-explorer';
+    const repo = '2cuteflakes/local-explorer-for-discord-packages';
     const title = encodeURIComponent(`[Auto-Report] Package Processing Error`);
     
     const body = encodeURIComponent(

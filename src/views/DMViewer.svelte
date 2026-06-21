@@ -22,7 +22,7 @@
         </div>
         <p class="dm-note">Only messages <strong>you</strong> sent are included in your data package, so this is a one-sided transcript.</p>
         <div class="dm-messages">
-            {#each transcript.messages as message}
+            {#each transcript.messages as message (message.id)}
                 <div class="dm-message">
                     <div class="dm-message-meta">{new Date(message.timestamp).toLocaleString('en-US')}</div>
                     {#if message.content}
@@ -34,7 +34,7 @@
                     {/if}
                     {#if message.attachments.length}
                         <div class="dm-message-attachments">
-                            {#each message.attachments as attachment}
+                            {#each message.attachments as attachment (attachment)}
                                 <Attachment url={attachment} />
                             {/each}
                         </div>

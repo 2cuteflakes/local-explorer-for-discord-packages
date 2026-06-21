@@ -11,7 +11,13 @@ export default () => {
 
     const removeAnalytics = window.location.href.includes('noanalytics');
 
-    const randomLastMessageAt = () => Date.now() - randomNumber(0, 365) * 24 * 60 * 60 * 1000;
+    // Randomizes both the day AND the time of day - otherwise every demo
+    // message lands at nearly the same wall-clock hour (today's hour, just
+    // shifted by whole days), which the UTC hours chart never reveals (it
+    // reads a separately-randomized hoursValues array) but recomputing
+    // hours from these per-message timestamps for a different timezone
+    // does, collapsing almost everything into 1-2 buckets.
+    const randomLastMessageAt = () => Date.now() - randomNumber(0, 365) * 24 * 60 * 60 * 1000 - randomNumber(0, 24 * 60 * 60 - 1) * 1000;
 
     const dmChannels = new Array(20).fill({}).map((_, i) => ({
         id: `demo-dm-${i}`,
@@ -35,10 +41,17 @@ export default () => {
     // One message always carries a (fake, non-resolving) image attachment so
     // the attachment-preview feature has something to exercise via the demo
     // route, without depending on a real package or real network access.
+    let demoMessageIdCounter = 0;
     const demoMessages = (content) => new Array(15).fill({}).map((_, i) => ({
+        // Real messages key their {#each} block by id (see DMViewer/
+        // ChannelViewer) - needs to be unique per message, same as a real package.
+        id: `demo-message-${demoMessageIdCounter++}`,
         timestamp: randomLastMessageAt(),
         content,
-        attachments: i === 0 ? ['https://cdn.discordapp.com/attachments/1/2/demo-photo.png'] : []
+        // A real, publicly-loadable Discord asset (the default embed
+        // avatar) rather than a fake non-resolving URL, so the preview
+        // actually shows something when browsing the demo by hand.
+        attachments: i === 0 ? ['https://cdn.discordapp.com/embed/avatars/0.png'] : []
     })).sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
 
     const dmTranscripts = {};

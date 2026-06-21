@@ -172,4 +172,35 @@ test.describe('Stats page (demo data)', () => {
         await attachment.getByText('Hide preview').click();
         await expect(attachment.locator('img')).toHaveCount(0);
     });
+
+    // Why this test exists: a real bug - the messages/attachments {#each}
+    // blocks had no key, so Svelte reused component instances positionally
+    // across navigations. Opening a preview on one DM's attachment, then
+    // switching to a different DM whose message at the same position also
+    // had an attachment, left the new image already expanded - state that
+    // was never actually requested for that image. Every demo conversation
+    // has exactly one attachment, so any two distinct "All Users" entries
+    // reproduce this.
+    test('given an open attachment preview, when I switch to a different DM, then its attachment starts collapsed (no leftover preview state)', async ({ page }) => {
+        // demo-dm-0 and demo-dm-1 are stable ids (always generated, every
+        // load) - only their message/timestamp content is randomized - so
+        // targeting them directly by href sidesteps the "All Users" list's
+        // random sort order entirely. Scoped to .all-users specifically,
+        // since a given demo-dm-N can also independently rank in Top Users.
+        const allUsers = page.locator('.card-group.all-lists .card.all-users');
+
+        await page.goto('/stats/demo');
+        await allUsers.locator('a[href="/dm/demo-dm-0"]').click();
+        await expect(page).toHaveURL(/\/dm\/demo-dm-0$/);
+
+        await page.locator('.attachment').first().getByText('Preview').click();
+        await expect(page.locator('.attachment img').first()).toBeVisible();
+
+        await page.goto('/stats/demo');
+        await allUsers.locator('a[href="/dm/demo-dm-1"]').click();
+        await expect(page).toHaveURL(/\/dm\/demo-dm-1$/);
+
+        await expect(page.locator('.attachment').first().getByText('Preview')).toBeVisible();
+        await expect(page.locator('.attachment img')).toHaveCount(0);
+    });
 });

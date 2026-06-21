@@ -15,7 +15,7 @@
             <div class="dm-avatar dm-avatar-emoji" aria-hidden="true">#️⃣</div>
             <div>
                 {#if transcript.isGroupDM}
-                    <h1>{transcript.name || 'Group DM'}{#if transcript.participants.length}: {#each transcript.participants as participant, i}{#if i > 0}, {/if}<a class="dm-username-link" href="https://vaultcord.com/tools/discord-id-lookup?prefill={participant.id}" target="_blank" rel="noopener noreferrer">{participant.username}</a>{/each}{/if}</h1>
+                    <h1>{transcript.name || 'Group DM'}{#if transcript.participants.length}: {#each transcript.participants as participant, i}{#if i > 0}{', '}{/if}<a class="dm-username-link" href="https://vaultcord.com/tools/discord-id-lookup?prefill={participant.id}" target="_blank" rel="noopener noreferrer">{participant.username}</a>{/each}{/if}</h1>
                 {:else}
                     <h1>{transcript.name}</h1>
                     <small class="text-muted">{transcript.guildName}</small>
@@ -24,7 +24,7 @@
         </div>
         <p class="dm-note">Only messages <strong>you</strong> sent are included in your data package, so this is a one-sided transcript.</p>
         <div class="dm-messages">
-            {#each transcript.messages as message}
+            {#each transcript.messages as message (message.id)}
                 <div class="dm-message">
                     <div class="dm-message-meta">{new Date(message.timestamp).toLocaleString('en-US')}</div>
                     {#if message.content}
@@ -36,7 +36,7 @@
                     {/if}
                     {#if message.attachments.length}
                         <div class="dm-message-attachments">
-                            {#each message.attachments as attachment}
+                            {#each message.attachments as attachment (attachment)}
                                 <Attachment url={attachment} />
                             {/each}
                         </div>

@@ -1,0 +1,22 @@
+diff --git a/src/Route.svelte b/src/Route.svelte
+index 8ce1e473daae3c3ffdb084dcd9cb203d6b651969..de65a24bb038365d281a2aaa36f1486c27c37c50 100755
+--- a/src/Route.svelte
++++ b/src/Route.svelte
+@@ -25,7 +25,16 @@
+         routeProps = rest;
+ 
+         if (c) {
+-            if (c.toString().startsWith("class ")) component = c;
++            // Svelte 5 compiles every component to a plain function (never a
++            // class), so the original `class ` check alone misidentifies
++            // real Svelte 5 components as lazy-load factories and calls them
++            // with no arguments, crashing immediately. Real Svelte
++            // components - both Svelte 4 classes and Svelte 5 functions -
++            // always take at least one parameter ($$anchor under Svelte 5).
++            // Genuine lazy-load factories (`() => import(...)`) are
++            // zero-argument functions, so c.length still distinguishes them.
++            // Patched locally pending https://github.com/EmilTholin/svelte-routing/issues/307
++            if (c.toString().startsWith("class ") || c.length >= 1) component = c;
+             else component = c();
+         }
+ 

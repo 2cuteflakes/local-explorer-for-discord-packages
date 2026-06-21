@@ -27,7 +27,7 @@ export const loadPackageFile = async (file) => {
     uz.onfile = (f) => files.push(f);
 
     const reader = file.stream().getReader();
-    // eslint-disable-next-line no-constant-condition
+     
     while (true) {
         const { done, value } = await reader.read();
         if (done) {
@@ -47,7 +47,7 @@ export const loadPackageFile = async (file) => {
     if (files.some((f) => f.name.startsWith('package/'))) {
         throwWithReport('Seems like you unzipped and re-zipped your package file. To fix this issue, instead of right clicking on the package folder and zipping it, you should open the folder, select all files inside it, and zip them directly. Name the resulting file "package.zip" and try again.');
     }
-    const hasUserJson = files.some((f) => /^([^\/]+)\/user\.json$/.test(f.name));
+    const hasUserJson = files.some((f) => /^([^/]+)\/user\.json$/.test(f.name));
     const hasMessages = files.some((f) => /\/c?[0-9]{16,32}\/channel\.json$/.test(f.name));
     if (!hasUserJson && !hasMessages) {
         throwWithReport('Your package looks empty or in an unexpected format. Make sure you uploaded the original <code>package.zip</code> from Discord.');

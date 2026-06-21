@@ -74,7 +74,7 @@ describe('LeaderboardItem', () => {
         // The tooltip's show/hide is pure CSS (:hover), which jsdom doesn't
         // apply component styles for in this test setup - so this just
         // confirms the content itself renders, not the hover visibility.
-        const { getByText, queryByText } = render(LeaderboardItem, {
+        const { getByText } = render(LeaderboardItem, {
             props: { ...baseProps, countRangeLabel: '1,000-2,000', countMessage: 'Solid buddies!' }
         });
         expect(getByText('1,000-2,000 messages')).toBeInTheDocument();

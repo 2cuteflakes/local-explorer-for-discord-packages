@@ -1,3 +1,14 @@
+// For interpolating untrusted-ish strings (e.g. Discord-provided payment
+// descriptions) into {@html} content - Discord generates these, not the
+// user directly, but we don't control or validate their contents either,
+// so they're not safe to trust verbatim.
+export const escapeHtml = (str) => String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+
 // Returns null when there's no real avatar to show, rather than falling
 // back to one of Discord's own default-avatar artwork images - callers
 // should render a generic placeholder (e.g. an initial) instead.
@@ -13,9 +24,9 @@ const MESSAGE_COUNT_LOW_THRESHOLD = 20;
 const MESSAGE_COUNT_MID_THRESHOLD = 200;
 
 const MESSAGE_COUNT_BANDS = [
-    { color: '#b0b0b0', message: "You've barely talked - practically strangers." },
+    { color: '#b0b0b0', message: 'You\'ve barely talked - practically strangers.' },
     { color: '#ffffff', message: 'A casual acquaintance.' },
-    { color: '#f5e6a8', message: "You're getting to know each other." },
+    { color: '#f5e6a8', message: 'You\'re getting to know each other.' },
     { color: '#a8d4ef', message: 'A real friendship is forming.' },
     { color: '#aee0a8', message: 'Solid buddies at this point!' },
     { color: '#c7b3e8', message: 'Close friends, for sure.' },
@@ -149,10 +160,10 @@ export const generateFileStructureDump = (files) => {
  */
 export const generateGitHubIssueURL = (errorMessage, fileStructure) => {
     const repo = '2cuteflakes/local-explorer-for-discord-packages';
-    const title = encodeURIComponent(`[Auto-Report] Package Processing Error`);
+    const title = encodeURIComponent('[Auto-Report] Package Processing Error');
     
     const body = encodeURIComponent(
-`**Error Message:**
+        `**Error Message:**
 ${errorMessage}
 
 **File Structure:**

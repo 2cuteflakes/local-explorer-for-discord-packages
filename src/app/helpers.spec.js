@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import {
+    escapeHtml,
     generateAvatarURL,
     messageCountInfo,
     messageCountColor,
@@ -10,6 +11,20 @@ import {
     generateFileStructureDump,
     generateGitHubIssueURL
 } from './helpers';
+
+describe('escapeHtml', () => {
+    it('escapes all five HTML-meaningful characters', () => {
+        expect(escapeHtml('<script>alert(\'"&"\')</script>')).toBe('&lt;script&gt;alert(&#39;&quot;&amp;&quot;&#39;)&lt;/script&gt;');
+    });
+
+    it('leaves plain text untouched', () => {
+        expect(escapeHtml('Nitro Classic - 1 Month')).toBe('Nitro Classic - 1 Month');
+    });
+
+    it('coerces non-string input', () => {
+        expect(escapeHtml(42)).toBe('42');
+    });
+});
 
 describe('generateAvatarURL', () => {
     it('returns null when there is no avatar hash', () => {

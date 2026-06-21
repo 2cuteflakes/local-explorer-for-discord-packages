@@ -2,7 +2,7 @@ import Papa from 'papaparse';
 
 import eventsData from './events.json';
 import { loadEstimatedTime, loadTask } from './store';
-import { getCreatedTimestamp, getFavoriteWords } from './helpers';
+import { getCreatedTimestamp, getFavoriteWords, escapeHtml } from './helpers';
 import { DecodeUTF8 } from 'fflate';
 import { snakeCase } from 'snake-case';
 
@@ -34,7 +34,7 @@ export const getServersRoot = (files) => {
  */
 export const getUserRoot = (files) => {
     // Find any user.json file
-    const sample = files.find(f => /^([^\/]+)\/user\.json$/.test(f.name));
+    const sample = files.find(f => /^([^/]+)\/user\.json$/.test(f.name));
     if (!sample) throw new Error('Could not find User folder structure');
     // Remove the file name to get the root
     const segments = sample.name.split('/');
@@ -91,16 +91,16 @@ export const parseCSV = (input) => {
  */
 export const parseJson = (input) => {
     return JSON.parse(input)
-    .filter((m) => m.Contents)
-    .map((m) => ({
-        id: m.ID,
-        timestamp: m.Timestamp,
-        length: m.Contents.length,
-        words: m.Contents.split(' '),
-        content: m.Contents,
-        attachments: m.Attachments
-    }));
-}
+        .filter((m) => m.Contents)
+        .map((m) => ({
+            id: m.ID,
+            timestamp: m.Timestamp,
+            length: m.Contents.length,
+            words: m.Contents.split(' '),
+            content: m.Contents,
+            attachments: m.Attachments
+        }));
+};
 
 export const perDay = (value, userID) => {
     return parseInt(value / ((Date.now() - getCreatedTimestamp(userID)) / 24 / 60 / 60 / 1000));
@@ -178,9 +178,13 @@ export const summarizePayments = (confirmedPayments) => {
     for (let p of confirmedPayments) {
         totalsByCurrency[p.currency] = (totalsByCurrency[p.currency] || 0) + netPaymentAmount(p);
     }
+    // p.description is Discord-generated, not user-typed, but we don't
+    // control or validate its contents - this gets rendered via {@html} in
+    // Stats.svelte's payments popup, so it needs escaping like any other
+    // untrusted-ish string would.
     const list = confirmedPayments
         .sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime())
-        .map((p) => `${p.description} (${p.currency.toUpperCase()} ${netPaymentAmount(p)})`)
+        .map((p) => `${escapeHtml(p.description)} (${p.currency.toUpperCase()} ${netPaymentAmount(p)})`)
         .join('<br>');
     const total = Object.keys(totalsByCurrency)
         .map((currency) => `${currency.toUpperCase()} ${totalsByCurrency[currency].toLocaleString('en-US')}`)
@@ -210,7 +214,7 @@ export const countEventOccurrences = (text, prevChunkEnd = '', eventNames = anal
         counts[event] = 0;
         let searchFrom = 0;
         let ind;
-        // eslint-disable-next-line no-cond-assign
+         
         while ((ind = str.indexOf(eventName, searchFrom)) !== -1) {
             counts[event]++;
             searchFrom = ind + eventName.length;

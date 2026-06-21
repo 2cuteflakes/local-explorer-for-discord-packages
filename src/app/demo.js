@@ -1,7 +1,10 @@
 const randomNumber = (min, max) => Math.floor(Math.random() * (max - min + 1) + min);
 
 const demoUserObject = {
-    id: 422820341791064085,
+    // Discord snowflakes are always strings in the real API, specifically
+    // to avoid this - a bare numeric literal this large already loses
+    // precision at the source.
+    id: '422820341791064085',
     username: 'Wumpus',
     discriminator: '0000',
     avatar: null
